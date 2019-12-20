@@ -8,11 +8,12 @@ import math
 from random import shuffle
 
 class Puzzle: 
-    def __init__(self, arr):
+    def __init__(self, arr, algorithm):
         self.goal    = [1,2,3,8,0,4,7,6,5]
         self.state   = State(arr)
         self.initial = State(arr)
         self.isDone  = False
+        self.algorithm = algorithm # UC - Uniform Cost, BFS - Best-First Search, A1, A2.
     
     def printBoard (self, arr):
         # output = [[0]* 3]*3
@@ -63,8 +64,7 @@ class Puzzle:
         while h != None:                   # we will pop everything from the heap until it is empty or until we find goal 
             state = heap.heappop(h)        # poping off a state that has min comparison. Comparison changes depending on heuristic 
             cost = cost + state [0]
-            state = state[1]
-            algorithm = "UC"               # UC - Uniform Cost, BFS - Best-First Search, A1, A2. 
+            state = state[1] 
             if (state.arr == self.goal):   # goal check
                 pathAction = self.buildPathAction(state) #building paths in order to show the output 
                 path = self.buildPath(state)
@@ -79,7 +79,7 @@ class Puzzle:
                 visited.append(state.arr)  # put current state's array in visited
                 count = count +1           # increment count to see how many states have been visited
                 self.state.arr = state.arr # assignment of current state to state because it then creates its successors
-                h = state.createSuccessors(h, visited, algorithm) 
+                h = state.createSuccessors(h, visited, self.algorithm) 
         return visited
               
 class State: 
@@ -105,29 +105,10 @@ class State:
     def createSuccessors (self, h, visited, algorithm):
         index_of_0 = self.arr.index(0)
         
-        if (algorithm == "UC"): 
-            moveUp = self.swap(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
-            moveDown = self.swap(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
-            moveRight = self.swap(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
-            moveLeft = self.swap(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
-        
-        elif (algorithm == "BFS"):
-            moveUp = self.swapBF(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
-            moveDown = self.swapBF(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
-            moveRight = self.swapBF(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
-            moveLeft = self.swapBF(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
-
-        elif (algorithm == "A1"):
-            moveUp = self.swapA1(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
-            moveDown = self.swapA1(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
-            moveRight = self.swapA1(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
-            moveLeft = self.swapA1(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
-        
-        elif (algorithm == "A2"):
-            moveUp = self.swapA2(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
-            moveDown = self.swapA2(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
-            moveRight = self.swapA2(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
-            moveLeft = self.swapA2(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
+        moveUp = self.swap(index_of_0, [3,4,5,6,7,8], -3, visited, "U", algorithm)
+        moveDown = self.swap(index_of_0, [0,1,2,3,4,5], 3, visited, "D", algorithm)
+        moveRight = self.swap(index_of_0, [0,1,3,4,6,7], 1, visited, "R", algorithm)
+        moveLeft = self.swap(index_of_0, [1,2,4,5,7,8], -1, visited, "L", algorithm)
         
         if moveUp is not None: 
             heap.heappush(h, moveUp)
@@ -143,17 +124,16 @@ class State:
 
         return h
     
-    # Uniform-Cost - not optimal as it will keep swapping 1,2,3,4,5,6,7,8 with 0 in that order
-    def swap (self, index_of_0, arr, i, visited, direction):
-        if index_of_0 in arr:
+    def swap (self, index_of_0, arr, i, visited, direction, algorithm):
+        # Uniform-Cost - not optimal as it will keep swapping 1,2,3,4,5,6,7,8 with 0 in that order
+        if algorithm == "UC" and index_of_0 in arr:
             new_state = self.arr[:]
             new_state[index_of_0], new_state[index_of_0 + i] = new_state[index_of_0 + i], new_state[index_of_0]
             if (new_state not in visited): # Comparison = cost of move
                 return new_state[index_of_0], State(new_state, self, direction, self.depth + 1)
 
-    # Best-Fisrt - one of the best algorithms with my data!
-    def swapBF (self, index_of_0, arr, i, visited, direction):
-        if index_of_0 in arr:
+        # Best-Fisrt - one of the best algorithms with my data!
+        elif algorithm == "BFS" and index_of_0 in arr:
             new_state = self.arr[:]
             new_state[index_of_0], new_state[index_of_0 + i] = new_state[index_of_0 + i], new_state[index_of_0]
             values_out_of_position = 0
@@ -163,9 +143,8 @@ class State:
             if (new_state not in visited): # Comparison = values out of position
                 return values_out_of_position, State(new_state, self, direction)
 
-    # A*1
-    def swapA1 (self, index_of_0, arr, i, visited, direction):
-        if index_of_0 in arr:
+        # A*1
+        elif algorithm == "A1" and index_of_0 in arr:
             new_state = self.arr[:]
             new_state[index_of_0], new_state[index_of_0 + i] = new_state[index_of_0 + i], new_state[index_of_0]
             values_out_of_position = 0
@@ -174,10 +153,9 @@ class State:
                     values_out_of_position += 1
             if (new_state not in visited):  # Comparison = values out of position + cost of move
                 return values_out_of_position + new_state[index_of_0], State(new_state, self, direction) 
-
-    # A*2
-    def swapA2 (self, index_of_0, arr, i, visited, direction):
-        if index_of_0 in arr:
+        
+        # A*2
+        elif algorithm == "A2" and index_of_0 in arr:
             new_state = self.arr[:]
             new_state[index_of_0], new_state[index_of_0 + i] = new_state[index_of_0 + i], new_state[index_of_0]
             manhattan_d = self.ManDistance(new_state)  # Manhattan Distance 
@@ -217,14 +195,51 @@ class State:
                     pass
         return int (manDist)
 
-''' Easy Puzzle - '''
-my_puzzle = Puzzle([1,3,4,8,6,2,7,0,5])
+''' Easy Puzzle - Uniform Cost'''
+my_puzzle = Puzzle([1,3,4,8,6,2,7,0,5], "UC")
 my_puzzle.solve()
 
-''' Medium Puzzle - '''
-#my_puzzle = Puzzle([2,8,1,0,4,3,7,6,5])
+''' Medium Puzzle - Unifrom Cost'''
+#my_puzzle = Puzzle([2,8,1,0,4,3,7,6,5], "UC")
 #my_puzzle.solve()
 
-''' Hard Puzzle '''
-#my_puzzle = Puzzle([5,6,7,4,0,8,3,2,1])
+''' Hard Puzzle - Uniform Cost'''
+#my_puzzle = Puzzle([5,6,7,4,0,8,3,2,1], "UC")
+#my_puzzle.solve()
+
+
+''' Easy Puzzle - Best First Search'''
+#my_puzzle = Puzzle([1,3,4,8,6,2,7,0,5], "BFS")
+#my_puzzle.solve()
+
+''' Medium Puzzle - Best First Search'''
+#my_puzzle = Puzzle([2,8,1,0,4,3,7,6,5], "BFS")
+#my_puzzle.solve()
+
+''' Hard Puzzle - Best First Search'''
+#my_puzzle = Puzzle([5,6,7,4,0,8,3,2,1], "BFS")
+#my_puzzle.solve()
+
+''' Easy Puzzle - A Star One'''
+#my_puzzle = Puzzle([1,3,4,8,6,2,7,0,5], "A1")
+#my_puzzle.solve()
+
+''' Medium Puzzle - A Star One'''
+#my_puzzle = Puzzle([2,8,1,0,4,3,7,6,5], "A1")
+#my_puzzle.solve()
+
+''' Hard Puzzle - A Star One'''
+#my_puzzle = Puzzle([5,6,7,4,0,8,3,2,1], "A1")
+#my_puzzle.solve()
+
+''' Easy Puzzle - A Star Two (Manhattan Distance) '''
+#my_puzzle = Puzzle([1,3,4,8,6,2,7,0,5], "A2")
+#my_puzzle.solve()
+
+''' Medium Puzzle - A Star Two (Manhattan Distance)'''
+#my_puzzle = Puzzle([2,8,1,0,4,3,7,6,5], "A2")
+#my_puzzle.solve()
+
+''' Hard Puzzle - A Star Two (Manhattan Distance)'''
+#my_puzzle = Puzzle([5,6,7,4,0,8,3,2,1], "A2")
 #my_puzzle.solve()
