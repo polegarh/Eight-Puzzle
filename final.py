@@ -64,6 +64,7 @@ class Puzzle:
             state = heap.heappop(h)        # poping off a state that has min comparison. Comparison changes depending on heuristic 
             cost = cost + state [0]
             state = state[1]
+            algorithm = "UC"               # UC - Uniform Cost, BFS - Best-First Search, A1, A2. 
             if (state.arr == self.goal):   # goal check
                 pathAction = self.buildPathAction(state) #building paths in order to show the output 
                 path = self.buildPath(state)
@@ -78,7 +79,7 @@ class Puzzle:
                 visited.append(state.arr)  # put current state's array in visited
                 count = count +1           # increment count to see how many states have been visited
                 self.state.arr = state.arr # assignment of current state to state because it then creates its successors
-                h = state.createSuccessors(h, visited) 
+                h = state.createSuccessors(h, visited, algorithm) 
         return visited
               
 class State: 
@@ -101,34 +102,42 @@ class State:
      Note that successors are created the same way, but stored differently depending on the comparison
      which depends on the heuristic. Thus you can uncomment the lines and test each algorithm indivisually
      --------------------------------------------------------------------------------------------------'''
-    def createSuccessors (self, h, visited):
+    def createSuccessors (self, h, visited, algorithm):
         index_of_0 = self.arr.index(0)
+        
+        if (algorithm == "UC"): 
+            moveUp = self.swap(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
+            moveDown = self.swap(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
+            moveRight = self.swap(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
+            moveLeft = self.swap(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
+        
+        elif (algorithm == "BFS"):
+            moveUp = self.swapBF(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
+            moveDown = self.swapBF(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
+            moveRight = self.swapBF(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
+            moveLeft = self.swapBF(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
 
-        moveUp = self.swap(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
-        #moveUp = self.swapA1(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
-        #moveUp = self.swapA2(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
-        #moveUp = self.swapBF(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
+        elif (algorithm == "A1"):
+            moveUp = self.swapA1(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
+            moveDown = self.swapA1(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
+            moveRight = self.swapA1(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
+            moveLeft = self.swapA1(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
+        
+        elif (algorithm == "A2"):
+            moveUp = self.swapA2(index_of_0, [3,4,5,6,7,8], -3, visited, "U")
+            moveDown = self.swapA2(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
+            moveRight = self.swapA2(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
+            moveLeft = self.swapA2(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
+        
         if moveUp is not None: 
             heap.heappush(h, moveUp)
 
-        moveDown = self.swap(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
-        #moveDown = self.swapA1(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
-        #moveDown = self.swapA2(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
-        #moveDown = self.swapBF(index_of_0, [0,1,2,3,4,5], 3, visited, "D")
         if moveDown is not None: 
             heap.heappush(h, moveDown)
-
-        moveRight = self.swap(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
-        #moveRight = self.swapA1(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
-        #moveRight = self.swapA2(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
-        #moveRight = self.swapBF(index_of_0, [0,1,3,4,6,7], 1, visited, "R")
+        
         if moveRight is not None: 
             heap.heappush(h, moveRight)
-
-        moveLeft = self.swap(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
-        #moveLeft = self.swapA1(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
-        #moveLeft = self.swapA2(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
-        #moveLeft = self.swapBF(index_of_0, [1,2,4,5,7,8], -1, visited, "L")
+        
         if moveLeft is not None: 
             heap.heappush(h, moveLeft)
 
